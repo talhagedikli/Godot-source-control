@@ -1,0 +1,39 @@
+[gd_scene load_steps=5 format=2]
+
+[ext_resource path="res://Scripts/GasEffect.gd" type="Script" id=1]
+[ext_resource path="res://Assets/block.png" type="Texture" id=2]
+
+[sub_resource type="Curve" id=1]
+_data = [ Vector2( 0, 0.769939 ), 0.0, 0.0, 0, 0, Vector2( 0.478, 1 ), 0.0, 0.0, 0, 0, Vector2( 0.998, 0.352761 ), 0.0, 0.0, 0, 0 ]
+
+[sub_resource type="Gradient" id=2]
+offsets = PoolRealArray( 0, 0.5, 1 )
+colors = PoolColorArray( 1, 1, 1, 0.345098, 1, 1, 1, 1, 1, 1, 1, 0 )
+
+[node name="GasEffect" type="Node2D"]
+script = ExtResource( 1 )
+
+[node name="Sprite" type="Sprite" parent="."]
+visible = false
+position = Vector2( 0, -4.45953 )
+texture = ExtResource( 2 )
+
+[node name="CPUParticles2D" type="CPUParticles2D" parent="."]
+emitting = false
+amount = 6
+lifetime = 1.2
+randomness = 0.8
+lifetime_randomness = 0.6
+emission_shape = 1
+emission_sphere_radius = 9.0
+gravity = Vector2( 0, 80 )
+linear_accel = 10.0
+linear_accel_random = 0.2
+scale_amount_curve = SubResource( 1 )
+color_ramp = SubResource( 2 )
+
+[node name="Timer" type="Timer" parent="."]
+wait_time = 1.2
+autostart = true
+
+[connection signal="timeout" from="Timer" to="." method="_on_Timer_timeout"]
