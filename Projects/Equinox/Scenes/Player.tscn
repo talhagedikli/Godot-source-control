@@ -31,19 +31,18 @@ smoothing_enabled = true
 current = true
 
 [node name="Collisions" type="Node2D" parent="."]
-visible = false
 
 [node name="RightCollision" type="RayCast2D" parent="Collisions"]
 scale = Vector2( 1, 0.5 )
 enabled = true
-cast_to = Vector2( 8, 0 )
+cast_to = Vector2( 5, 0 )
 collision_mask = 2
 collide_with_areas = true
 
 [node name="LeftCollision" type="RayCast2D" parent="Collisions"]
 scale = Vector2( 1, 0.5 )
 enabled = true
-cast_to = Vector2( -8, 0 )
+cast_to = Vector2( -5, 0 )
 collision_mask = 2
 collide_with_areas = true
 
@@ -63,9 +62,9 @@ collide_with_areas = true
 
 [node name="Tween" type="Tween" parent="."]
 
-[node name="Timer" type="Timer" parent="."]
+[node name="DashTimer" type="Timer" parent="."]
 wait_time = 0.4
 one_shot = true
 
 [connection signal="tween_completed" from="Tween" to="." method="_on_Tween_tween_completed"]
-[connection signal="timeout" from="Timer" to="." method="_on_Timer_timeout"]
+[connection signal="timeout" from="DashTimer" to="." method="_on_DashTimer_timeout"]
