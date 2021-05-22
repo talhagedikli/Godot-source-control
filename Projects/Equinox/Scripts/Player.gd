@@ -2,7 +2,6 @@ extends KinematicBody2D
 
 var up: Vector2 = Vector2(0, -1)
 var gravity: float = 8
-var time: float = OS.get_system_time_secs()
 
 var maxFallSpeed = 175
 var maxSpeed = 150
@@ -26,9 +25,10 @@ var pack_power : float = 0.00
 var pack_power_max = 15
 
 var dash_power: float = 150
-var dash_duration: float = 0.25
-var dash_count_max: int = 2
+var dash_duration: float = 0.17
+var dash_count_max: int = 3
 var dash_count: int = dash_count_max
+var is_dashing: bool = false
 
 
 var facing = 1
@@ -39,6 +39,7 @@ var direction: Vector2 = Vector2()
 
 enum {
 	MOVE,
+	CROUCH,
 	HOLD,
 	JUMP,
 	DASH,
@@ -49,7 +50,7 @@ var state = MOVE
 var key_hold = "z"
 var key_pack = "alt"
 var key_jump = "space"
-var key_dash = "x"
+var key_dash = "shift"
 
 onready var pivot = get_node("Pivot")
 onready var body : Sprite = get_node("Pivot/Sprite")
@@ -60,17 +61,18 @@ onready var raycastLeft : RayCast2D = $Collisions/LeftCollision
 onready var raycastRight : RayCast2D = $Collisions/RightCollision
 
 onready var dashTween : Tween = $Tween
-onready var dashTimer : Timer = $DashTimer
+
+onready var playerUI = get_parent().get_node("PlayerUI")
 
 signal using_pack
+signal dahsed
 
 func _ready():
 	pass
 
-
 func _physics_process(delta):
-	
-	onGround = raycastBottom.is_colliding()
+#	onGround = raycastBottom.is_colliding()
+	onGround = is_on_floor()
 	if raycastRight.is_colliding() or raycastLeft.is_colliding():
 		on_wall = true
 	else:
@@ -79,12 +81,15 @@ func _physics_process(delta):
 
 	if state == MOVE:
 		player_state_move()
-		motion = move_and_slide(motion, up)
+	elif state == CROUCH:
+		player_state_crouch()
 	elif state == HOLD:
 		player_state_hold()
-		motion = move_and_slide(motion, up)
 	elif state == DASH:
 		player_state_dash()
+	
+	motion = move_and_slide(motion, up)
+	
 	
 	#Calculate facing
 	if motion.x > 0: facing = 1
@@ -94,13 +99,9 @@ func _physics_process(delta):
 #	direction = motion.normalized()
 	
 	#Animation
-	body.scale.x = lerp(body.scale.x, 1, 0.5)
-	body.scale.y = lerp(body.scale.y, 1, 0.5)
-	
+	body.scale.x = approach(body.scale.x, 1, 0.05)
+	body.scale.y = approach(body.scale.y, 1, 0.05)
 
-
-
-#Functions
 #States
 func player_state_move():
 	if Input.is_action_pressed("right"):
@@ -138,19 +139,20 @@ func player_state_move():
 		if (motion.y < 0) && (!Input.is_action_pressed(key_jump) && (!Input.is_action_pressed(key_pack))):
 			motion.y *= 0.8
 	if Input.is_action_pressed(key_pack):
-		emit_signal("using_pack", Vector2(global_position.x, global_position.y + 8))
 		if gas > 0:
+			emit_signal("using_pack", Vector2(global_position.x, global_position.y + 8))
 			gas -= 1
-			pack_power = lerp(pack_power, pack_power_max, 0.1)
+			pack_power += 0.8
 		else:
-			pack_power = lerp(pack_power, 0, 0.2)
+			pack_power -= 0.5
 	else:
-		pack_power = lerp(pack_power, 0, 0.2)
+		pack_power -= 0.5
 		if onGround:
 			gas = gas_max
+	pack_power = clamp(pack_power, 0, pack_power_max)
 	if raycastTop.is_colliding(): pack_power = 0
 	gas_rate = gas / gas_max
-	get_parent().get_node("PlayerUI").set_gas_rate(gas_rate)
+	playerUI.set_gas_rate(gas_rate)
 	
 	motion.y -= pack_power
 	
@@ -163,13 +165,15 @@ func player_state_move():
 	
 	#Switch statement
 	if Input.is_action_just_pressed(key_hold) && on_wall: change_state(HOLD)
-	if Input.is_action_just_pressed(key_dash) && dash_count > 0: 
-#		freeze_frame(50)
-		find_direction()
+	if Input.is_action_pressed("down") && onGround: change_state(CROUCH)
+	if Input.is_action_just_pressed(key_dash) && dash_count > 0 && !is_dashing && !dashTween.is_active(): 
+		find_direction(false)
 		dash_count -= 1
+		emit_signal("dashed", true)
 		motion *= Vector2.ZERO
 		if direction == Vector2.ZERO: direction.x = last_facing
 		change_state(DASH)
+	playerUI.set_dash_count(dash_count)
 
 func player_state_jump():
 	if !onGround:
@@ -194,6 +198,12 @@ func player_state_jump():
 			motion.y = -jumpForce
 			squashAndStretch(0.6, 1.4)
 
+func player_state_crouch():
+	motion = lerp(motion, Vector2.ZERO, 0.01)
+	squashAndStretch(1.4, 0.6)
+	if !Input.is_action_pressed("down"):
+		change_state(MOVE)
+		
 func player_state_fly():
 	pass
 
@@ -212,16 +222,19 @@ func player_state_hold():
 		change_state(MOVE)
 
 func player_state_dash():
+	is_dashing = true
 	if on_wall && direction.x != 0: 
-		dashTween.stop_all()
+		dashTween.remove(self, "motion")
 		change_state(MOVE)
-#	motion = lerp(motion, motion + direction * dash_power, 0.8)
-#	motion = move_and_slide(motion, Vector2.ZERO)
-	dashTween.interpolate_property(self, "motion", motion, motion + direction * dash_power, 0.15, Tween.TRANS_QUINT, Tween.EASE_OUT)
+	dashTween.interpolate_property(self, "motion", motion, motion + direction * dash_power, dash_duration, Tween.TRANS_QUINT, Tween.EASE_OUT)
 	dashTween.start()
-	motion = move_and_slide(motion, Vector2.ZERO)
-	
-	pass
+	if ((abs(direction.x) + abs(direction.y)) != 2): 
+		squashAndStretch(abs(direction.x)/5 + 1, abs(direction.y)/5 + 1)
+	yield(dashTween, "tween_completed")
+	motion *= 0.4
+	find_direction(false)
+	is_dashing = false
+	change_state(MOVE)
 
 #Functions
 func change_state(new_state):
@@ -231,29 +244,35 @@ func squashAndStretch(xscale: float, yscale: float):
 	body.scale.x = xscale
 	body.scale.y = yscale
 
-func find_direction():
+func find_direction(also_facing: bool):
 	if Input.is_action_pressed("right"):
 		direction.x = 1
 	elif Input.is_action_pressed("left"):
 		direction.x = -1
 	else:
 		direction.x = 0
-#	direction.x = Input.is_action_pressed("right") or Input.is_action_pressed("left")
+	# If you want to change players facing by pressing right/left directly
+	if also_facing:
+		facing = direction.x
+	
 	if Input.is_action_pressed("up"):
 		direction.y = -1
 	elif Input.is_action_pressed("down"):
 		direction.y = 1
 	else:
 		direction.y = 0
-func freeze_frame(duration: float):
-	OS.delay_msec(duration)
-#Signals
-func _on_DashTimer_timeout():
-	motion *= 0.7
-	find_direction()
-	state = MOVE
 
+func frame_freeze(duration: float):
+	OS.delay_msec(duration)
+
+func approach(start, end, shift):
+	if start < end:
+		return min(start + shift, end)
+	else:
+		return max(start - shift, end)
+
+#Signals
 func _on_Tween_tween_completed(object, key):
-	motion *= 0.4
-	find_direction()
-	change_state(MOVE)
+	pass
+
+
