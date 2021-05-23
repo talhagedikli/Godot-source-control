@@ -26,6 +26,9 @@ __meta__ = {
 
 [node name="Player" parent="." instance=ExtResource( 2 )]
 
+[node name="Player2" parent="." instance=ExtResource( 2 )]
+position = Vector2( 50, 0 )
+
 [node name="PlayerUI" parent="." instance=ExtResource( 3 )]
 
 [node name="EffectsManager" type="Node2D" parent="."]
@@ -37,3 +40,5 @@ script = ExtResource( 7 )
 
 [connection signal="dahsed" from="Player" to="PlayerUI" method="_on_Player_dahsed"]
 [connection signal="using_pack" from="Player" to="EffectsManager" method="_on_Player_using_pack"]
+[connection signal="dahsed" from="Player2" to="PlayerUI" method="_on_Player_dahsed"]
+[connection signal="using_pack" from="Player2" to="EffectsManager" method="_on_Player_using_pack"]
