@@ -3,7 +3,7 @@ extends CanvasLayer
 const RED = Color(1, 0, 0, 1)
 
 var gas_rate : float = 0.00 setget set_gas_rate, get_gas_rate
-var gas_rate_a = 1 setget set_gas_rate_a, get_gas_rate_a
+var gas_rate_a = 0.8 setget set_gas_rate_a, get_gas_rate_a
 var counter: float = 0
 
 onready var gasTween = get_node("GasRate/Tween")
@@ -19,11 +19,9 @@ func _ready():
 
 func _physics_process(delta):
 	if gas_rate < 0.4:
-		counter += 1
-		gas_rate_a = sin(counter/2)
+		gas_rate_a = sin(OS.get_system_time_msecs()/25)
 	else:
-		gas_rate_a = 1
-		counter = 0
+		gas_rate_a = 0.8
 	gasRate.modulate.a = gas_rate_a
 	gasRate.rect_scale.x = lerp(gasRate.rect_scale.x, gas_rate, 0.1) + 0.0001
 	
@@ -33,9 +31,9 @@ func _physics_process(delta):
 	elif dash_count < 3:
 		dashCounter.modulate.a = sin(OS.get_system_time_msecs()/50)
 	else: 
-		dashCounter.modulate.a = approach(dashCounter.modulate.a, 1, 0.2)
+		dashCounter.modulate.a = GlobalFunc.approach(dashCounter.modulate.a, 0.8, 0.2)
 	
-	dashCounter.rect_size.x = approach(dashCounter.rect_size.x, cell_size * dash_count, 8)
+	dashCounter.rect_size.x = GlobalFunc.approach(dashCounter.rect_size.x, cell_size * dash_count, 8)
 	
 
 
@@ -54,13 +52,6 @@ func get_gas_rate_a():
 
 func set_dash_count(value):
 	dash_count = value
-
-func approach(start, end, shift):
-	if start < end:
-		return min(start + shift, end)
-	else:
-		return max(start - shift, end)
-
 
 func _on_Player_dahsed():
 	dashCounter.rect_size.x = cell_size * dash_count

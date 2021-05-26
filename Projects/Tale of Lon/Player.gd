@@ -52,7 +52,6 @@ var key_pack = "alt"
 var key_jump = "space"
 var key_dash = "shift"
 
-onready var pivot = get_node("Pivot")
 onready var body : Sprite = get_node("Pivot/Sprite")
 
 onready var raycastBottom : RayCast2D = $Collisions/BottomCollision
@@ -97,8 +96,8 @@ func _physics_process(delta):
 	else: facing = facing
 	
 	#Animation
-	body.scale.x = GlobalFunc.approach(body.scale.x, 1, 0.05)
-	body.scale.y = GlobalFunc.approach(body.scale.y, 1, 0.05)
+#	body.scale.x = GlobalFunc.approach(body.scale.x, 1, 0.05)
+#	body.scale.y = GlobalFunc.approach(body.scale.y, 1, 0.05)
 
 #States
 func player_state_move():
@@ -134,23 +133,6 @@ func player_state_move():
 			motion.y = -jumpForce
 			squashAndStretch(0.6, 1.4)
 	
-	# Backpack
-	if Input.is_action_pressed(key_pack):
-		if gas > 0:
-			gas_rate = gas / gas_max
-			emit_signal("using_pack", Vector2(global_position.x, global_position.y + 8))
-			gas -= 1
-			pack_power += 0.8
-		else:
-			pack_power -= 0.5
-	else:
-		pack_power -= 0.5
-		if onGround:
-			gas = gas_max
-	if raycastTop.is_colliding(): pack_power = 0
-	pack_power = clamp(pack_power, 0, pack_power_max)	
-	motion.y -= pack_power
-	
 	if !onGround: # Apply gravity and make variable jump
 		if (motion.y < 0) && (!Input.is_action_pressed(key_jump) && (!Input.is_action_pressed(key_pack))):
 			motion.y *= 0.8
@@ -175,8 +157,6 @@ func player_state_move():
 		$Effects/GhostTimer.start(dash_duration / 6)
 		change_state(DASH)
 	# Set UI variables
-	playerUI.set_dash_count(dash_count)
-	playerUI.set_gas_rate(gas / gas_max)
 
 func player_state_jump():
 	if !onGround:
@@ -272,9 +252,4 @@ func frame_freeze(duration: float):
 	OS.delay_msec(duration)
 
 #Signals
-func _on_GhostTimer_timeout():
-	var ghost_effect = preload("res://Scenes/GhostEffect.tscn").instance()
-	get_parent().add_child(ghost_effect)
-	ghost_effect.position = position
-	ghost_effect.texture = $Pivot/Sprite.texture
-	ghost_effect.scale = scale
+
