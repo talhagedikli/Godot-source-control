@@ -18,11 +18,7 @@ func _ready():
 	pass
 
 func _physics_process(delta):
-	if gas_rate < 0.4:
-		gas_rate_a = sin(OS.get_system_time_msecs()/25)
-	else:
-		gas_rate_a = 0.8
-	gasRate.modulate.a = gas_rate_a
+	gasRate.modulate.a = sin(OS.get_system_time_msecs()/25) if (gas_rate < 0.4) else 0.8
 	gasRate.rect_scale.x = lerp(gasRate.rect_scale.x, gas_rate, 0.1) + 0.0001
 	
 	if dash_count < 2:
