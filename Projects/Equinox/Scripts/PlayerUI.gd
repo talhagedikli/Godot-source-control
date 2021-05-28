@@ -18,9 +18,11 @@ func _ready():
 	pass
 
 func _physics_process(delta):
+	# Player's gas rate UI
 	gasRate.modulate.a = sin(OS.get_system_time_msecs()/25) if (gas_rate < 0.4) else 0.8
 	gasRate.rect_scale.x = lerp(gasRate.rect_scale.x, gas_rate, 0.1) + 0.0001
 	
+	# Players dash count UI
 	if dash_count < 2:
 		dashCounter.modulate.a = sin(OS.get_system_time_msecs()/25)
 		dashCounter.modulate.blend(RED)
@@ -28,8 +30,9 @@ func _physics_process(delta):
 		dashCounter.modulate.a = sin(OS.get_system_time_msecs()/50)
 	else: 
 		dashCounter.modulate.a = GlobalFunc.approach(dashCounter.modulate.a, 0.8, 0.2)
-	
 	dashCounter.rect_size.x = GlobalFunc.approach(dashCounter.rect_size.x, cell_size * dash_count, 8)
+	
+	###
 	
 
 
