@@ -32,7 +32,6 @@ func _physics_process(delta):
 		dashCounter.modulate.a = GlobalFunc.approach(dashCounter.modulate.a, 0.8, 0.2)
 	dashCounter.rect_size.x = GlobalFunc.approach(dashCounter.rect_size.x, cell_size * dash_count, 8)
 	
-	### 
 	
 
 

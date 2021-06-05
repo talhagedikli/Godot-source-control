@@ -1,10 +1,10 @@
 extends KinematicBody2D
 
 var up: Vector2 = Vector2(0, -1)
-var gravity: float = 8
+var gravity: float = 400
 
-var maxFallSpeed = 175
-var maxSpeed = 150
+var maxFallSpeed = 200
+var maxSpeed = 175
 var accel = 8
 var decel = 10
 
@@ -24,7 +24,7 @@ var gas_rate : float = gas / gas_max
 var pack_power : float = 0.00
 var pack_power_max = 15
 
-var dash_power: float = 500
+var dash_power: float = 500 # In pixels
 var dash_duration: float = 0.25
 var dash_count_max: int = 3
 var dash_count: int = dash_count_max
@@ -63,9 +63,11 @@ onready var raycastRight : RayCast2D = $Collisions/RightCollision
 onready var dashTween : Tween = $Tween
 
 onready var playerUI = get_parent().get_node("PlayerUI")
+onready var effects_manager = get_parent().get_node("EffectsManager")
 
 signal using_pack
 signal dashed
+signal pack_power_rate(rate, pos)
 
 func _ready():
 	pass
@@ -81,7 +83,7 @@ func _physics_process(delta):
 
 
 	if state == MOVE:
-		player_state_move()
+		player_state_move(delta)
 	elif state == CROUCH:
 		player_state_crouch()
 	elif state == HOLD:
@@ -101,7 +103,7 @@ func _physics_process(delta):
 	body.scale.y = GlobalFunc.approach(body.scale.y, 1, 0.05)
 
 #States
-func player_state_move():
+func player_state_move(delta):
 	if Input.is_action_pressed("right"):
 		motion.x += accel
 	elif Input.is_action_pressed("left"):
@@ -142,21 +144,22 @@ func player_state_move():
 			gas -= 1
 			pack_power += 0.8
 		else:
-			pack_power -= 0.5
+			pack_power = 0
 	else:
-		pack_power -= 0.5
+		pack_power = 0
 		if onGround:
 			gas = gas_max
 	if raycastTop.is_colliding(): pack_power = 0
 	pack_power = clamp(pack_power, 0, pack_power_max)	
 	motion.y -= pack_power
 	
+	last_facing = facing
+	
+	# Apply gravity and clamp motion
 	if !onGround: # Apply gravity and make variable jump
 		if (motion.y < 0) && (!Input.is_action_pressed(key_jump) && (!Input.is_action_pressed(key_pack))):
-			motion.y *= 0.8
-		motion.y += gravity
-	
-	last_facing = facing
+			motion.y *= 0.6
+		motion.y += gravity * delta	
 	
 	motion.x = clamp(motion.x, -maxSpeed, maxSpeed)
 	motion.y = clamp(motion.y, -maxFallSpeed, maxFallSpeed)
@@ -164,19 +167,23 @@ func player_state_move():
 	# Switch statement
 	if Input.is_action_just_pressed(key_hold) && on_wall: change_state(HOLD)
 #	if Input.is_action_pressed("down") && onGround: change_state(CROUCH)
-	if Input.is_action_just_pressed(key_dash) && dash_count > 0 && !is_dashing && !dashTween.is_active(): 
+	if Input.is_action_just_pressed(key_dash) && dash_count > 0 && !is_dashing: 
 		find_direction(false)
 		dash_count -= 1
 		emit_signal("dashed", true)
 		motion = Vector2.ZERO
 		if direction == Vector2.ZERO: direction.x = last_facing
+#		dashTween.set_active(true)
 		dashTween.interpolate_property(self, "motion", motion, motion + direction * dash_power, dash_duration, Tween.TRANS_QUINT, Tween.EASE_OUT)
+		dashTween.reset(self, "motion")
 		dashTween.start()
 		$Effects/GhostTimer.start(dash_duration / 6)
+		is_dashing = true
 		change_state(DASH)
 	# Set UI variables
 	playerUI.set_dash_count(dash_count)
 	playerUI.set_gas_rate(gas / gas_max)
+	emit_signal("pack_power_rate", pack_power / pack_power_max, position)
 
 func player_state_jump():
 	if !onGround:
@@ -225,21 +232,25 @@ func player_state_hold():
 		change_state(MOVE)
 
 func player_state_dash():
-	is_dashing = true
 	if on_wall && direction.x != 0: 
+		dashTween.stop(self, "motion")
 		dashTween.reset(self, "motion")
+#		dashTween.set_active(false)
 		$Effects/GhostTimer.stop()
+		is_dashing = false
 		change_state(MOVE)
-
+	
+	# Fixing a bug about particles
 	if ((abs(direction.x) + abs(direction.y)) != 2):
 		squashAndStretch(abs(direction.x)/5 + 1, abs(direction.y)/5 + 1)
 
 	yield(dashTween, "tween_completed")
+	dashTween.stop(self, "motion")
 	dashTween.reset(self, "motion")
 	$Effects/GhostTimer.stop()
 	motion *= 0.4
-	find_direction(false)
 	is_dashing = false
+	find_direction(false)	
 	change_state(MOVE)
 
 #Functions
