@@ -1,7 +1,7 @@
 extends KinematicBody2D
 
 var up: Vector2 = Vector2(0, -1)
-var gravity: float = 400
+var gravity: float = 300
 
 var maxFallSpeed = 200
 var maxSpeed = 175
@@ -25,7 +25,7 @@ var pack_power : float = 0.00
 var pack_power_max = 15
 
 var dash_power: float = 500 # In pixels
-var dash_duration: float = 0.25
+var dash_duration: float = 0.3
 var dash_count_max: int = 3
 var dash_count: int = dash_count_max
 var is_dashing: bool = false
@@ -142,11 +142,11 @@ func player_state_move(delta):
 			gas_rate = gas / gas_max
 			emit_signal("using_pack", Vector2(global_position.x, global_position.y + 8))
 			gas -= 1
-			pack_power += 0.8
+			pack_power += 1.5
 		else:
-			pack_power = 0
+			pack_power -= 1
 	else:
-		pack_power = 0
+		pack_power -= 1
 		if onGround:
 			gas = gas_max
 	if raycastTop.is_colliding(): pack_power = 0
