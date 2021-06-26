@@ -289,3 +289,6 @@ func _on_GhostTimer_timeout():
 	ghost_effect.position = position
 	ghost_effect.texture = $Pivot/Sprite.texture
 	ghost_effect.scale = scale
+
+
+
