@@ -1,12 +1,12 @@
 extends KinematicBody2D
 
 var up: Vector2 = Vector2(0, -1)
-var gravity: float = 300
+var gravity: float = 275
 
 var maxFallSpeed = 200
-var maxSpeed = 175
-var accel = 8
-var decel = 10
+var maxSpeed = 200
+var accel = 10
+var decel = 12
 
 var jumpForce = 300
 var canJump : bool = false
@@ -159,7 +159,7 @@ func player_state_move(delta):
 	if !onGround: # Apply gravity and make variable jump
 		if (motion.y < 0) && (!Input.is_action_pressed(key_jump) && (!Input.is_action_pressed(key_pack))):
 			motion.y *= 0.6
-		motion.y += gravity * delta	
+		motion.y += gravity * delta
 	
 	motion.x = clamp(motion.x, -maxSpeed, maxSpeed)
 	motion.y = clamp(motion.y, -maxFallSpeed, maxFallSpeed)
