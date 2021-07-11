@@ -24,7 +24,7 @@ var gas_rate : float = gas / gas_max
 var pack_power : float = 0.00
 var pack_power_max = 15
 
-var dash_power: float = 500 # In pixels
+var dash_power: float = 400 # In pixels
 var dash_duration: float = 0.3
 var dash_count_max: int = 3
 var dash_count: int = dash_count_max
@@ -73,11 +73,6 @@ func _ready():
 	pass
 
 func _physics_process(delta):
-#	onGround = raycastBottom.is_colliding()
-#	if raycastRight.is_colliding() or raycastLeft.is_colliding():
-#		on_wall = true
-#	else:
-#		on_wall = false
 	onGround = is_on_floor()
 	on_wall = is_on_wall()
 
@@ -158,7 +153,7 @@ func player_state_move(delta):
 	# Apply gravity and clamp motion
 	if !onGround: # Apply gravity and make variable jump
 		if (motion.y < 0) && (!Input.is_action_pressed(key_jump) && (!Input.is_action_pressed(key_pack))):
-			motion.y *= 0.6
+			motion.y *= 0.7
 		motion.y += gravity * delta
 	
 	motion.x = clamp(motion.x, -maxSpeed, maxSpeed)
