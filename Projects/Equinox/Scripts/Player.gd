@@ -1,5 +1,5 @@
 extends KinematicBody2D
-
+#edited text
 var up: Vector2 = Vector2(0, -1)
 var gravity: float = 275
 
