@@ -51,6 +51,8 @@ var key_hold = "z"
 var key_pack = "alt"
 var key_jump = "space"
 var key_dash = "shift"
+var test = 10
+var arr = [0, 1, 2]
 
 onready var pivot = get_node("Pivot")
 onready var body : Sprite = get_node("Pivot/Sprite")
@@ -75,8 +77,7 @@ func _ready():
 func _physics_process(delta):
 	onGround = is_on_floor()
 	on_wall = is_on_wall()
-
-
+	
 	if state == MOVE:
 		player_state_move(delta)
 	elif state == CROUCH:
