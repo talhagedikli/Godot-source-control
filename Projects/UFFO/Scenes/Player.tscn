@@ -1,0 +1,22 @@
+[gd_scene load_steps=3 format=2]
+
+[ext_resource path="res://Scripts/Player.gd" type="Script" id=1]
+[ext_resource path="res://Scripts/StateMachine.gd" type="Script" id=2]
+
+[node name="Player" type="Node"]
+script = ExtResource( 1 )
+
+[node name="Timers" type="Node" parent="."]
+
+[node name="ShootTimer" type="Timer" parent="Timers"]
+
+[node name="ExhaustTimer" type="Timer" parent="Timers"]
+
+[node name="GhostTimer" type="Timer" parent="Timers"]
+
+[node name="Tweens" type="Node" parent="."]
+
+[node name="DashTween" type="Tween" parent="Tweens"]
+
+[node name="StateMachine" type="Node" parent="."]
+script = ExtResource( 2 )

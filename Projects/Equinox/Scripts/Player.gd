@@ -170,7 +170,8 @@ func player_state_move(delta):
 		motion = Vector2.ZERO
 		if direction == Vector2.ZERO: direction.x = last_facing
 #		dashTween.set_active(true)
-		dashTween.interpolate_property(self, "motion", motion, motion + direction * dash_power, dash_duration, Tween.TRANS_QUINT, Tween.EASE_OUT)
+		dashTween.interpolate_property(self, "motion", motion, motion + direction * dash_power, dash_duration, 
+											Tween.TRANS_QUINT, Tween.EASE_OUT)
 		dashTween.reset(self, "motion")
 		dashTween.start()
 		$Effects/GhostTimer.start(dash_duration / 6)
