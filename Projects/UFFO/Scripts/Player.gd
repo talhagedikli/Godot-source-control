@@ -1,4 +1,6 @@
-extends Node2D
+extends KinematicBody2D
+
+class_name PlayerClass
 
 var up: Vector2 = Vector2(0, -1)
 
@@ -17,10 +19,9 @@ var ship_direction : Vector2 = Vector2(0, 0)
 # Dash
 var dash_direction : Vector2 = Vector2(1, 0)
 onready var dash_tween : Tween = get_node("Tweens/DashTween")
-var dashdur_max = 120.0
-var dashdur = dashdur_max
-var dash_rate = dashdur / dashdur_max
 var can_dash : bool = false
+var dash_power: float = 400 # In pixels
+var dash_duration: float = 0.3
 
 # Shoot
 onready var shoot_timer : Timer = get_node("Timers/ShootTimer")
@@ -36,7 +37,7 @@ var fadeout : bool = false
 
 onready var exhaust_timer : Timer = get_node("Timers/ExhaustTimer")
 onready var ghost_timer : Timer = get_node("Timers/GhostTimer")
-onready var state : Node = get_node("StateMachine")
+onready var fsm = get_node("StateMachine")
 
 
 var key_hold = "z"
@@ -49,8 +50,13 @@ var arr = [0, 1, 2]
 func _ready():
 	pass # Replace with function body.
 
-
-
+func _physics_process(delta):
+	if fsm.state == fsm.MOVE:
+		fsm.move()
+	elif fsm.state == fsm.DASH:
+		fsm.ash()
+	elif fsm.state == fsm.SHOOT:
+		pass
 
 func update_ship_speed():
 	if (Input.is_action_pressed("ui_down")):
